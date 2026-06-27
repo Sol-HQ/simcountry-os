@@ -15,14 +15,14 @@ import { clusterApiUrl } from '@solana/web3.js';
 
 require('@solana/wallet-adapter-react-ui/styles.css');
 
-const ConnectionProviderFixed =
+const ConnectionProviderTyped =
   ConnectionProvider as React.FC<
     React.PropsWithChildren<React.ComponentProps<typeof ConnectionProvider>>
   >;
-const WalletProviderFixed = WalletProvider as React.FC<
+const WalletProviderTyped = WalletProvider as React.FC<
   React.PropsWithChildren<React.ComponentProps<typeof WalletProvider>>
 >;
-const WalletModalProviderFixed = WalletModalProvider as React.FC<
+const WalletModalProviderTyped = WalletModalProvider as React.FC<
   React.PropsWithChildren<React.ComponentProps<typeof WalletModalProvider>>
 >;
 
@@ -39,10 +39,10 @@ export function Providers({ children }: ProvidersProps) {
   );
 
   return (
-    <ConnectionProviderFixed endpoint={endpoint}>
-      <WalletProviderFixed wallets={wallets} autoConnect>
-        <WalletModalProviderFixed>{children}</WalletModalProviderFixed>
-      </WalletProviderFixed>
-    </ConnectionProviderFixed>
+    <ConnectionProviderTyped endpoint={endpoint}>
+      <WalletProviderTyped wallets={wallets} autoConnect>
+        <WalletModalProviderTyped>{children}</WalletModalProviderTyped>
+      </WalletProviderTyped>
+    </ConnectionProviderTyped>
   );
 }
