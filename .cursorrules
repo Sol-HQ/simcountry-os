@@ -1,0 +1,45 @@
+# SimCountry OS — Cursor Rules
+
+You are working on SimCountry OS, a digital nation sandbox built with Next.js 14 App Router, TypeScript, Tailwind CSS, Supabase, and Solana wallet adapter.
+
+## Behavior Rules
+
+- Always use TypeScript strict mode. No `any` types.
+- Use App Router patterns: server components by default, `'use client'` only when required.
+- Keep components under 200 lines. Extract sub-components when they grow.
+- Import from exact file paths — no barrel exports.
+- Use Tailwind utility classes directly. Do not create new CSS files unless adding to `globals.css`.
+- Use the `.glass` class for all panel/card backgrounds.
+- Always handle loading and error states for async data.
+
+## UI Conventions
+
+- Background: `#0a0a0f` (`bg-[#0a0a0f]`)
+- Panels: `.glass` class (defined in globals.css)
+- Accent: `text-blue-400` / `bg-blue-500`
+- Reward accent: `text-amber-400`
+- Labels: `text-xs uppercase tracking-widest text-gray-500`
+- Status dots: `w-1.5 h-1.5 rounded-full` with color by status
+
+## File Conventions
+
+- Pages: `app/route/page.tsx` — default export, PascalCase function name
+- Components: `components/ComponentName.tsx` — named export
+- Types: defined in `lib/supabase.ts` or inline for UI-only types
+- Hooks (v1+): `hooks/useHookName.ts`
+
+## Data Conventions
+
+- Supabase client: import from `@/lib/supabase`
+- Never expose `SUPABASE_SERVICE_ROLE_KEY` on the client
+- Citizen slot status union: `'npc' | 'claimable' | 'claimed'`
+- Mission status union: `'active' | 'completed' | 'expired' | 'locked'`
+- District types: `arts | government | commerce | knowledge | trade | faith`
+
+## Do Not
+
+- Do not install new packages without checking for an existing solution first
+- Do not create mock API routes when static data in the page file will suffice for v0
+- Do not add animations with framer-motion — use Tailwind transitions only
+- Do not add `console.log` to production code
+- Do not use `!important` in CSS
