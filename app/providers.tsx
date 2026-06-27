@@ -15,12 +15,12 @@ import { clusterApiUrl } from '@solana/web3.js';
 
 require('@solana/wallet-adapter-react-ui/styles.css');
 
-const withTypedChildren = <P,>(Component: React.ComponentType<P>) =>
+const asTypedProvider = <P,>(Component: React.ComponentType<P>) =>
   Component as React.FC<React.PropsWithChildren<P>>;
 
-const ConnectionProviderTyped = withTypedChildren(ConnectionProvider);
-const WalletProviderTyped = withTypedChildren(WalletProvider);
-const WalletModalProviderTyped = withTypedChildren(WalletModalProvider);
+const ConnectionProviderTyped = asTypedProvider(ConnectionProvider);
+const WalletProviderTyped = asTypedProvider(WalletProvider);
+const WalletModalProviderTyped = asTypedProvider(WalletModalProvider);
 
 interface ProvidersProps {
   children: ReactNode;
