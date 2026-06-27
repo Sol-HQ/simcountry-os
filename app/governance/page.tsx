@@ -137,7 +137,7 @@ function ProposalCard({
           />
           <div
             className="bg-red-500 transition-all"
-            style={{ width: `${Math.round((proposal.nay / total) * 100)}%` }}
+            style={{ width: total > 0 ? `${Math.round((proposal.nay / total) * 100)}%` : '0%' }}
           />
         </div>
         <div className="flex justify-between text-[10px] text-gray-500 uppercase tracking-wider">

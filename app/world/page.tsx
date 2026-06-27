@@ -19,7 +19,7 @@ export default function WorldPage() {
       <PageHeader />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* 3D Canvas */}
-        <div className="lg:col-span-2 glass rounded-xl border border-white/10 overflow-hidden" style={{ height: '520px' }}>
+        <div className="lg:col-span-2 glass rounded-xl border border-white/10 overflow-hidden h-[520px]">
           <Suspense fallback={null}>
             <WorldCanvas />
           </Suspense>

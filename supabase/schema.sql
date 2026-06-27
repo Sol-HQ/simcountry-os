@@ -16,7 +16,7 @@ create table if not exists districts (
   created_at    timestamptz not null default now()
 );
 
--- Seed districts
+-- Seed districts (idempotent: safe to re-run)
 insert into districts (id, name, type, occupancy, culture_output) values
   ('artist-quarter', 'Artist Quarter', 'arts',       75, 18),
   ('council-hall',   'Council Hall',   'government', 100, 8),
