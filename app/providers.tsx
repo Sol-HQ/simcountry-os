@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import React, { ReactNode, useMemo } from 'react';
 import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import {
   ConnectionProvider,
@@ -15,7 +15,22 @@ import { clusterApiUrl } from '@solana/web3.js';
 
 require('@solana/wallet-adapter-react-ui/styles.css');
 
-export function Providers({ children }: { children: React.ReactNode }) {
+const ConnectionProviderFixed =
+  ConnectionProvider as React.FC<
+    React.PropsWithChildren<React.ComponentProps<typeof ConnectionProvider>>
+  >;
+const WalletProviderFixed = WalletProvider as React.FC<
+  React.PropsWithChildren<React.ComponentProps<typeof WalletProvider>>
+>;
+const WalletModalProviderFixed = WalletModalProvider as React.FC<
+  React.PropsWithChildren<React.ComponentProps<typeof WalletModalProvider>>
+>;
+
+interface ProvidersProps {
+  children: ReactNode;
+}
+
+export function Providers({ children }: ProvidersProps) {
   const network = WalletAdapterNetwork.Mainnet;
   const endpoint = useMemo(() => clusterApiUrl(network), [network]);
   const wallets = useMemo(
@@ -24,10 +39,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} autoConnect>
-        <WalletModalProvider>{children}</WalletModalProvider>
-      </WalletProvider>
-    </ConnectionProvider>
+    <ConnectionProviderFixed endpoint={endpoint}>
+      <WalletProviderFixed wallets={wallets} autoConnect>
+        <WalletModalProviderFixed>{children}</WalletModalProviderFixed>
+      </WalletProviderFixed>
+    </ConnectionProviderFixed>
   );
 }
