@@ -17,7 +17,7 @@ SimCountry OS is a living digital nation built on Next.js 14, Supabase, and Sola
 | Styling | Tailwind CSS v3 |
 | Database | Supabase (Postgres + RLS) |
 | Wallet | @solana/wallet-adapter-react |
-| 3D View | @react-three/fiber (placeholder) |
+| 3D View | @react-three/fiber (@react-three/fiber + drei) |
 | Deploy | Vercel |
 | Package manager | pnpm |
 
