@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Providers } from './providers';
-import { NavBar } from '@/components/NavBar';
-import { ActivityTicker } from '@/components/ActivityTicker';
+import { AppChrome } from '@/components/AppChrome';
 
 export const metadata: Metadata = {
   title: 'SimCountry OS — Digital Nation Sandbox',
@@ -24,9 +23,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="flex flex-col min-h-screen bg-[#0a0a0f] text-gray-100">
         <Providers>
-          <NavBar />
-          <main className="flex-1 pt-16 pb-12">{children}</main>
-          <ActivityTicker />
+          <AppChrome>{children}</AppChrome>
         </Providers>
       </body>
     </html>
