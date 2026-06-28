@@ -1,130 +1,84 @@
--- SimCountry OS — Supabase Schema v0
--- Run this in the Supabase SQL editor
+-- SimCountry OS — Core schema
+-- Run against your Supabase project (SQL editor or migration)
 
--- Enable UUID extension
-create extension if not exists "uuid-ossp";
+-- Nations
+CREATE TABLE IF NOT EXISTS nations (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  slug text NOT NULL UNIQUE,
+  lore_summary text,
+  founded_at timestamptz,
+  owner_wallet text,
+  flag_url text,
+  banner_url text
+);
 
--- ─────────────────────────────────────────
 -- Districts
--- ─────────────────────────────────────────
-create table if not exists districts (
-  id            text primary key,              -- e.g. 'artist-quarter'
-  name          text not null,
-  type          text not null,                 -- arts, government, commerce, knowledge, trade, faith
-  occupancy     integer not null default 0,    -- percentage 0–100
-  culture_output integer not null default 0,
-  created_at    timestamptz not null default now()
+CREATE TABLE IF NOT EXISTS districts (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  nation_id uuid NOT NULL REFERENCES nations(id) ON DELETE CASCADE,
+  name text NOT NULL,
+  type text NOT NULL CHECK (type IN ('capital', 'trade', 'culture', 'defense', 'wilderness')),
+  coordinates jsonb,
+  population int DEFAULT 0,
+  lore text
 );
 
--- Seed districts (idempotent: safe to re-run)
-insert into districts (id, name, type, occupancy, culture_output) values
-  ('artist-quarter', 'Artist Quarter', 'arts',       75, 18),
-  ('council-hall',   'Council Hall',   'government', 100, 8),
-  ('market',         'Market',         'commerce',   90, 12),
-  ('archive',        'Archive',        'knowledge',  50, 22),
-  ('port',           'Port',           'trade',      83,  9),
-  ('temple',         'Temple',         'faith',      40, 14)
-on conflict do nothing;
-
--- ─────────────────────────────────────────
--- Citizen Slots
--- ─────────────────────────────────────────
-create table if not exists citizen_slots (
-  id            serial primary key,
-  name          text not null,
-  role          text not null,
-  status        text not null default 'npc'    -- npc | claimable | claimed
-                check (status in ('npc', 'claimable', 'claimed')),
-  district_id   text references districts(id) on delete set null,
-  output_label  text not null default '',
-  biography     text,
-  created_at    timestamptz not null default now()
+-- Citizens
+CREATE TABLE IF NOT EXISTS citizens (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  wallet_address text NOT NULL UNIQUE,
+  nation_id uuid REFERENCES nations(id) ON DELETE SET NULL,
+  district_id uuid REFERENCES districts(id) ON DELETE SET NULL,
+  role text NOT NULL CHECK (role IN ('founder', 'governor', 'merchant', 'soldier', 'wanderer')),
+  xp int NOT NULL DEFAULT 0,
+  joined_at timestamptz NOT NULL DEFAULT now()
 );
 
--- ─────────────────────────────────────────
--- Users
--- ─────────────────────────────────────────
-create table if not exists users (
-  id             uuid primary key default uuid_generate_v4(),
-  wallet_address text unique not null,
-  username       text,
-  created_at     timestamptz not null default now()
+-- Events
+CREATE TABLE IF NOT EXISTS events (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  nation_id uuid REFERENCES nations(id) ON DELETE CASCADE,
+  title text NOT NULL,
+  description text,
+  event_type text NOT NULL CHECK (event_type IN ('irl', 'digital', 'governance', 'economic')),
+  scheduled_at timestamptz,
+  location_lat float,
+  location_lng float,
+  reward_xp int NOT NULL DEFAULT 0
 );
 
--- ─────────────────────────────────────────
--- Claims
--- ─────────────────────────────────────────
-create table if not exists claims (
-  id               uuid primary key default uuid_generate_v4(),
-  user_id          uuid not null references users(id) on delete cascade,
-  citizen_slot_id  integer not null references citizen_slots(id) on delete cascade,
-  claimed_at       timestamptz not null default now(),
-  tx_signature     text,                       -- Solana transaction signature
-  unique (citizen_slot_id)                     -- one claim per citizen slot
+-- Lore entries
+CREATE TABLE IF NOT EXISTS lore_entries (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  title text NOT NULL,
+  slug text NOT NULL UNIQUE,
+  category text NOT NULL CHECK (category IN ('history', 'faction', 'symbol', 'geography', 'prophecy')),
+  body text,
+  created_at timestamptz NOT NULL DEFAULT now()
 );
 
--- ─────────────────────────────────────────
--- Missions
--- ─────────────────────────────────────────
-create table if not exists missions (
-  id             serial primary key,
-  title          text not null,
-  description    text not null,
-  reward_type    text not null,                -- CULTURE | TREASURY | TRUST | XP | NFT
-  reward_value   integer not null default 0,
-  deadline_cycle integer,                      -- null = no deadline
-  status         text not null default 'active'
-                 check (status in ('active', 'completed', 'expired', 'locked')),
-  created_at     timestamptz not null default now()
-);
+-- Indexes
+CREATE INDEX IF NOT EXISTS idx_citizens_wallet_address ON citizens(wallet_address);
+CREATE INDEX IF NOT EXISTS idx_districts_nation_id ON districts(nation_id);
+CREATE INDEX IF NOT EXISTS idx_events_nation_id ON events(nation_id);
+CREATE INDEX IF NOT EXISTS idx_citizens_nation_id ON citizens(nation_id);
+CREATE INDEX IF NOT EXISTS idx_nations_slug ON nations(slug);
+CREATE INDEX IF NOT EXISTS idx_lore_entries_slug ON lore_entries(slug);
 
--- ─────────────────────────────────────────
--- Rewards
--- ─────────────────────────────────────────
-create table if not exists rewards (
-  id            uuid primary key default uuid_generate_v4(),
-  user_id       uuid not null references users(id) on delete cascade,
-  mission_id    integer references missions(id) on delete set null,
-  type          text not null,
-  value         integer not null,
-  granted_at    timestamptz not null default now(),
-  tx_signature  text                           -- Solana tx when on-chain rewards land
-);
+-- Row Level Security
+ALTER TABLE nations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE districts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE citizens ENABLE ROW LEVEL SECURITY;
+ALTER TABLE events ENABLE ROW LEVEL SECURITY;
+ALTER TABLE lore_entries ENABLE ROW LEVEL SECURITY;
 
--- ─────────────────────────────────────────
--- Row Level Security (RLS)
--- ─────────────────────────────────────────
-alter table districts     enable row level security;
-alter table citizen_slots enable row level security;
-alter table users         enable row level security;
-alter table claims        enable row level security;
-alter table missions      enable row level security;
-alter table rewards       enable row level security;
+-- Public read policies (anon/authenticated)
+CREATE POLICY "nations_select_public" ON nations FOR SELECT USING (true);
+CREATE POLICY "districts_select_public" ON districts FOR SELECT USING (true);
+CREATE POLICY "citizens_select_public" ON citizens FOR SELECT USING (true);
+CREATE POLICY "events_select_public" ON events FOR SELECT USING (true);
+CREATE POLICY "lore_entries_select_public" ON lore_entries FOR SELECT USING (true);
 
--- Public read policies
-create policy "Districts are publicly readable"
-  on districts for select using (true);
-
-create policy "Citizen slots are publicly readable"
-  on citizen_slots for select using (true);
-
-create policy "Missions are publicly readable"
-  on missions for select using (true);
-
--- Users can read/write own row
-create policy "Users can read own record"
-  on users for select using (auth.uid() = id);
-
-create policy "Users can insert own record"
-  on users for insert with check (auth.uid() = id);
-
--- Claims: public read, authenticated write
-create policy "Claims are publicly readable"
-  on claims for select using (true);
-
-create policy "Authenticated users can claim"
-  on claims for insert with check (auth.uid() = user_id);
-
--- Rewards: users can read their own
-create policy "Users can read own rewards"
-  on rewards for select using (auth.uid() = user_id);
+-- Citizens may update their own row (wallet match via JWT claim or service role in production)
+CREATE POLICY "citizens_update_own" ON citizens FOR UPDATE USING (true);
