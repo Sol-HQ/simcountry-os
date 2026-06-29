@@ -5,8 +5,13 @@ import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
 import {
   ConnectionProvider,
   WalletProvider,
+  type ConnectionProviderProps,
+  type WalletProviderProps,
 } from '@solana/wallet-adapter-react';
-import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
+import {
+  WalletModalProvider,
+  type WalletModalProviderProps,
+} from '@solana/wallet-adapter-react-ui';
 import {
   PhantomWalletAdapter,
   SolflareWalletAdapter,
@@ -15,12 +20,17 @@ import { clusterApiUrl } from '@solana/web3.js';
 
 require('@solana/wallet-adapter-react-ui/styles.css');
 
-const asTypedProvider = <P,>(Component: React.ComponentType<P>) =>
-  Component as React.FC<React.PropsWithChildren<P>>;
-
-const ConnectionProviderTyped = asTypedProvider(ConnectionProvider);
-const WalletProviderTyped = asTypedProvider(WalletProvider);
-const WalletModalProviderTyped = asTypedProvider(WalletModalProvider);
+// React 18 dropped implicit `children` from FC, so some third-party providers
+// typed as FC<Props> reject children in JSX. Re-cast them with children added.
+const ConnectionProviderFixed = ConnectionProvider as React.FC<
+  ConnectionProviderProps & { children: React.ReactNode }
+>;
+const WalletProviderFixed = WalletProvider as React.FC<
+  WalletProviderProps & { children: React.ReactNode }
+>;
+const WalletModalProviderFixed = WalletModalProvider as React.FC<
+  WalletModalProviderProps & { children: React.ReactNode }
+>;
 
 interface ProvidersProps {
   children: ReactNode;
@@ -35,10 +45,10 @@ export function Providers({ children }: ProvidersProps) {
   );
 
   return (
-    <ConnectionProviderTyped endpoint={endpoint}>
-      <WalletProviderTyped wallets={wallets} autoConnect>
-        <WalletModalProviderTyped>{children}</WalletModalProviderTyped>
-      </WalletProviderTyped>
-    </ConnectionProviderTyped>
+    <ConnectionProviderFixed endpoint={endpoint}>
+      <WalletProviderFixed wallets={wallets} autoConnect>
+        <WalletModalProviderFixed>{children}</WalletModalProviderFixed>
+      </WalletProviderFixed>
+    </ConnectionProviderFixed>
   );
 }
